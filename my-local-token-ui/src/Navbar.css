@@ -1,0 +1,225 @@
+/* src/Navbar.css (Elite + Dropdown) */
+
+/* Variabel bisa diambil dari App.css atau didefinisikan ulang */
+:root {
+  --jupiter-bg-dark: #1a1d2e;
+  --jupiter-bg-card: #2a2e45;
+  --jupiter-bg-input: #3c3f5e;
+  --jupiter-text-primary: #f0f0f5;
+  --jupiter-text-secondary: #a0a5c0;
+  --jupiter-gradient-start: #c74cfc;
+  --jupiter-gradient-mid: #a656f7;
+  --jupiter-gradient-end: #7b61ff;
+  --jupiter-border: #40456e;
+  --connected-green: #39d39f;
+  --error-text: #fc4c4c;
+}
+
+
+.navbar {
+background: rgba(26, 29, 46, 0.85); /* Lebih solid sedikit */
+backdrop-filter: blur(16px) saturate(180%);
+-webkit-backdrop-filter: blur(16px) saturate(180%);
+padding: 12px 0;
+position: fixed;
+width: 100%;
+top: 0;
+left: 0;
+z-index: 1000;
+border-bottom: 1px solid rgba(64, 72, 110, 0.6); /* Border lebih jelas */
+box-shadow: 0 4px 25px rgba(0, 0, 0, 0.35);
+transition: background 0.3s ease;
+}
+
+.navbar-container {
+max-width: 1300px; /* Lebarkan agar sesuai App */
+margin: 0 auto;
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 0 30px;
+min-height: 60px;
+}
+
+.nav-logo {
+font-size: 1.6em;
+font-weight: 700;
+color: var(--jupiter-text-primary);
+letter-spacing: -0.5px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.nav-logo span[role="img"] { font-size: 1.5rem; }
+
+.nav-links {
+display: flex;
+gap: 18px; /* Jarak link lebih rapat */
+background: rgba(42, 46, 69, 0.6);
+padding: 10px 20px;
+border-radius: 25px;
+border: 1px solid var(--jupiter-border);
+box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+align-items: center;
+}
+
+.nav-link {
+  /* Reset */
+  background: none; border: none; padding: 0; margin: 0; font: inherit;
+  cursor: pointer; outline: inherit;
+
+  /* Gaya Link */
+  background-color: var(--link-bg-inactive); /* Latar awal subtle */
+  color: var(--jupiter-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95em;
+  transition: color 0.25s ease-in-out, transform 0.2s ease, background-color 0.25s ease;
+  padding: 8px 14px; /* Padding tombol */
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+.nav-link span[role="img"] { font-size: 1.1em; } /* Ukuran emoji */
+
+.nav-link:hover {
+color: var(--jupiter-text-primary);
+background-color: rgba(255, 255, 255, 0.08);
+transform: translateY(-1px);
+}
+
+.nav-link.active {
+color: var(--jupiter-text-primary);
+font-weight: 600;
+background: linear-gradient(95deg, var(--jupiter-gradient-start), var(--jupiter-gradient-mid));
+box-shadow: 0 2px 8px rgba(166, 86, 247, 0.3);
+}
+.nav-link.active span[role="img"] { filter: brightness(1.2); }
+
+.nav-wallet {
+display: flex;
+align-items: center;
+margin-left: 20px;
+position: relative; /* Untuk positioning dropdown */
+}
+
+/* Tombol Connect */
+.connect-button-nav {
+background-image: linear-gradient(95deg, var(--jupiter-gradient-start), var(--jupiter-gradient-mid), var(--jupiter-gradient-end));
+background-size: 200% auto;
+color: white; border: none; padding: 10px 22px; border-radius: 10px;
+font-size: 0.95em; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+box-shadow: 0 3px 10px rgba(167, 86, 247, 0.2); display: flex; align-items: center; gap: 6px;
+}
+.connect-button-nav:hover {
+background-position: right center; box-shadow: 0 5px 15px rgba(167, 86, 247, 0.3); transform: translateY(-2px);
+}
+
+/* Info Wallet (sekarang tombol juga) */
+.wallet-info-nav {
+background-color: rgba(42, 46, 69, 0.9); /* Lebih solid */
+padding: 8px 12px 8px 10px; /* Sesuaikan padding */
+border-radius: 20px;
+font-size: 0.95em;
+font-weight: 500;
+color: var(--jupiter-text-primary);
+border: 1px solid var(--jupiter-border);
+box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+display: flex;
+align-items: center;
+gap: 8px;
+cursor: pointer; /* Jadi bisa diklik */
+transition: background-color 0.3s ease, box-shadow 0.3s ease;
+position: relative; /* Untuk panah */
+min-width: 150px; /* Agar tidak terlalu sempit */
+justify-content: space-between; /* Sebar icon, alamat, panah */
+}
+.wallet-info-nav:hover {
+  background-color: rgba(60, 63, 94, 0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.wallet-icon-indicator {
+display: inline-block; width: 9px; height: 9px; /* Sedikit lebih kecil */
+background-color: var(--connected-green); border-radius: 50%;
+box-shadow: 0 0 7px var(--connected-green); flex-shrink: 0; /* Jangan mengecil */
+}
+
+.wallet-address {
+  font-family: monospace; font-size: 1em;
+  overflow: hidden; /* Cegah teks keluar jika terlalu panjang */
+  white-space: nowrap;
+  text-overflow: ellipsis; /* Tidak terlalu berguna karena sudah dipotong */
+}
+
+/* Panah Dropdown */
+.dropdown-arrow {
+  font-size: 0.7em;
+  color: var(--jupiter-text-secondary);
+  transition: transform 0.3s ease;
+  margin-left: 5px;
+}
+.dropdown-arrow.open {
+  transform: rotate(180deg); /* Panah berputar saat menu terbuka */
+}
+
+
+/* Dropdown Menu Wallet */
+.wallet-dropdown {
+position: absolute;
+top: calc(100% + 10px); /* Posisi di bawah tombol info wallet */
+right: 0;
+background-color: var(--jupiter-bg-card); /* Background sama dengan kartu */
+border-radius: 12px; /* Radius lebih kecil dari kartu utama */
+border: 1px solid var(--jupiter-border);
+box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+padding: 10px 0; /* Padding atas bawah */
+z-index: 1100; /* Di atas navbar */
+min-width: 180px; /* Lebar minimum dropdown */
+animation: dropdownFadeIn 0.2s ease-out;
+overflow: hidden; /* Agar item tidak keluar radius */
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+display: block;
+background: none;
+border: none;
+color: var(--jupiter-text-secondary);
+padding: 10px 20px; /* Padding item */
+text-align: left;
+width: 100%;
+cursor: pointer;
+font-size: 0.95em;
+font-weight: 500;
+transition: background-color 0.2s ease, color 0.2s ease;
+white-space: nowrap; /* Pastikan teks tidak wrap */
+}
+
+.dropdown-item:hover {
+background-color: rgba(255, 255, 255, 0.08); /* Highlight hover */
+color: var(--jupiter-text-primary);
+}
+
+.dropdown-item.disconnect {
+color: var(--error-text); /* Warna merah untuk disconnect */
+border-top: 1px solid var(--jupiter-border); /* Garis pemisah */
+margin-top: 5px;
+padding-top: 10px;
+}
+.dropdown-item.disconnect:hover {
+  background-color: rgba(252, 76, 76, 0.15); /* Hover merah */
+  color: #ff6b6b; /* Merah lebih terang saat hover */
+}
+
+
+/* Responsiveness Sederhana untuk Navbar */
+@media (max-width: 992px) { /* ... (Sama seperti sebelumnya) ... */ }
+@media (max-width: 768px) { /* ... (Sama seperti sebelumnya) ... */ }
+

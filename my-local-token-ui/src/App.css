@@ -1,0 +1,622 @@
+/* src/App.css - Jupiter-Inspired Colors */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+
+/* === PERUBAHAN: Variabel Warna Tema Jupiter-Inspired === */
+:root {
+  --jup-bg-dark: #161825;         /* Background utama sangat gelap */
+  --jup-bg-card: #1f2233;         /* Background kartu sedikit lebih terang */
+  --jup-bg-input: #2a2f45;        /* Background input/elemen sekunder */
+  --jup-text-primary: #f0f0f5;     /* Teks utama terang */
+  --jup-text-secondary: #8a91b4;   /* Teks sekunder abu-abu kebiruan */
+  --jup-accent-lime: #c7f284;      /* Aksen hijau lime terang */
+  --jup-accent-lime-dark: #b9e076; /* Aksen hijau lime hover */
+  --jup-accent-blue: #8b6dff;       /* Biru/ungu untuk highlight sekunder */
+  --jup-border: #353a55;          /* Warna border lembut */
+  --jup-text-on-accent: #10121a;   /* Teks gelap untuk kontras di atas aksen lime */
+  --connected-green: #39d39f;
+  --success-bg: rgba(57, 211, 159, 0.1);
+  --success-text: var(--connected-green);
+  --error-bg: rgba(252, 76, 76, 0.1);
+  --error-text: #fc4c4c;
+  --card-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  --card-hover-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --code-bg: #1e2030;
+}
+
+body {
+  margin: 0;
+  padding-top: 110px; /* Beri ruang DI ATAS KONTEN untuk Navbar fixed */
+  padding-bottom: 60px;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--jupiter-bg-dark);
+  color: var(--jupiter-text-primary);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1; /* Taruh di belakang konten */
+  pointer-events: none;
+  background: radial-gradient(ellipse at 70% 10%, rgba(181, 97, 247, 0.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 30% 90%, rgba(139, 109, 255, 0.12) 0%, transparent 60%);
+  animation: bgMove 25s ease-in-out infinite alternate; /* Animasi sedikit lebih lambat */
+}
+@keyframes bgMove {
+  0% { background-position: 70% 10%, 30% 90%; opacity: 0.8; }
+  100% { background-position: 65% 20%, 35% 85%; opacity: 1; }
+}
+
+/* Kontainer utama aplikasi */
+.App {
+  max-width: 1400px; /* Lebar maksimum konten */
+  width: 95%; /* Lebih responsif */
+  margin: 0 auto; /* Pusatkan konten */
+  padding: 0 10px; /* Padding kiri kanan untuk konten */
+  position: relative;
+  z-index: 1;
+}
+
+/* Sembunyikan H1 utama jika tidak dipakai */
+ .App > h1 {
+    display: none;
+ }
+
+/* Judul Bagian (h2) di dalam kartu */
+h2 {
+  color: var(--jupiter-text-primary);
+  margin-top: 0; /* Hapus margin atas default H2 di dalam kartu */
+  margin-bottom: 22px; /* Jarak konsisten */
+  border-bottom: 1px solid var(--jupiter-border);
+  padding-bottom: 14px;
+  font-weight: 600;
+  font-size: 1.2em; /* Ukuran judul bagian */
+  text-align: left;
+  letter-spacing: 0.5px;
+}
+
+/* Tombol Aksi Umum (Form) */
+button.action-button {
+  background-image: linear-gradient(95deg, var(--jupiter-gradient-start), var(--jupiter-gradient-mid), var(--jupiter-gradient-end));
+  background-size: 200% auto;
+  color: white;
+  border: none;
+  padding: 13px 28px; /* Sesuaikan padding */
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease; /* Transisi lebih smooth */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+}
+button.action-button:hover {
+  background-position: right center;
+  box-shadow: 0 6px 18px rgba(181, 97, 247, 0.3); /* Shadow lebih berwarna saat hover */
+  transform: translateY(-3px); /* Lebih terangkat */
+}
+button:active {
+   transform: translateY(-1px);
+   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+ }
+
+
+/* === Layout Dashboard === */
+.dashboard-layout {
+  display: flex;
+  flex-wrap: wrap; /* Tetap wrap untuk layar kecil */
+  gap: 30px; /* Jarak antar kolom */
+  margin-top: 25px;
+  justify-content: center; /* Pusatkan kolom jika ada ruang */
+  width: 100%;
+  align-items: stretch; /* Membuat semua kolom sama tinggi */
+}
+
+/* Kolom Kiri (Sidebar) */
+.sidebar {
+  flex: 1 1 340px; /* Basis sedikit lebih besar */
+  min-width: 300px; /* Lebar minimum */
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* Jarak antar kartu di sidebar */
+}
+
+/* Kolom Tengah (Hero Card) */
+.center-content {
+  flex: 2 1 450px; /* Basis lebih besar, bisa tumbuh lebih banyak */
+  min-width: 320px;
+  display: flex;
+  align-items: stretch; /* Samakan tinggi dengan kolom lain */
+  justify-content: center;
+}
+
+/* Kolom Kanan (Info Akun & Mint) */
+.account-info {
+  flex: 1 1 320px; /* Basis sedikit lebih kecil */
+  min-width: 290px;
+  background: transparent; /* Tidak perlu background ganda */
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: auto; /* Tinggi sesuai konten */
+  gap: 30px; /* Jarak antara Info Akun dan Kartu Mint */
+}
+/* Pastikan kartu di dalam kolom kanan mengambil lebar penuh */
+.account-info .action-card,
+.account-info .account-details-card {
+    width: 100%;
+    box-sizing: border-box; /* Padding tidak menambah lebar */
+    margin-bottom: 0; /* Hapus margin bawah jika gap parent sudah cukup */
+}
+
+
+/* === Styling Kartu (Umum) === */
+.info-balance-card, .action-card, .hero-card, .account-details-card {
+  background: linear-gradient(145deg, rgba(42, 46, 69, 0.9) 0%, rgba(38, 42, 60, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(150%);
+  -webkit-backdrop-filter: blur(15px) saturate(150%);
+  padding: 25px 28px; /* Padding standar kartu */
+  border-radius: 16px;
+  border: 1px solid var(--jupiter-border);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+  display: flex; /* Aktifkan flexbox untuk semua kartu */
+  flex-direction: column; /* Arah kolom */
+  height: 100%; /* Coba buat kartu mengisi tinggi kolom flex */
+}
+.info-balance-card:hover, .action-card:hover, .hero-card:hover, .account-details-card:hover {
+    transform: translateY(-4px); /* Efek terangkat saat hover */
+    box-shadow: 0 12px 35px rgba(181, 97, 247, 0.2); /* Shadow lebih jelas saat hover */
+    border-color: var(--jupiter-gradient-mid); /* Border ungu saat hover */
+}
+
+/* Kartu Info Akun (di kolom kanan) */
+/* .account-details-card { } */ /* Tidak perlu style khusus jika sudah pakai gaya umum */
+.account-details-card h2 { width: 100%; }
+.account-details {
+    width: 100%;
+    word-break: break-all;
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Biarkan bagian ini tumbuh mengisi ruang */
+}
+.account-details .account-address {
+    font-size: 1em;
+    color: var(--jupiter-gradient-end);
+    font-weight: 500;
+    margin-bottom: 12px;
+    margin-top: 4px;
+    word-break: break-all;
+    line-height: 1.4;
+    /* flex-grow: 1; Hapus agar tidak mendorong tombol terlalu jauh */
+}
+/* Styling untuk Tombol Aksi Akun */
+.account-actions {
+    margin-top: auto; /* Dorong ke bagian bawah kartu */
+    padding-top: 15px; /* Jarak dari alamat */
+    display: flex;
+    gap: 12px; /* Jarak antar tombol sedikit dirapatkan */
+    width: 100%;
+}
+.account-action-button {
+    flex-grow: 1; padding: 9px 15px; font-size: 13px; font-weight: 600;
+    border-radius: 8px; cursor: pointer; transition: all 0.25s ease-out;
+    text-align: center; border: 1.5px solid; background: transparent;
+    backdrop-filter: blur(5px);
+}
+.account-action-button:not(.disconnect) { /* Tombol Ganti Akun */
+    border-image-source: linear-gradient(95deg, var(--jupiter-gradient-start), var(--jupiter-gradient-mid), var(--jupiter-gradient-end));
+    border-image-slice: 1; color: var(--jupiter-text-secondary);
+}
+.account-action-button:not(.disconnect):hover {
+    background-image: linear-gradient(95deg, var(--jupiter-gradient-start), var(--jupiter-gradient-mid), var(--jupiter-gradient-end));
+    background-size: 100% 100%; color: white; border-color: transparent;
+    border-image-source: none; transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 15px rgba(181, 97, 247, 0.2);
+}
+.account-action-button.disconnect { /* Tombol Disconnect */
+    border-color: var(--jupiter-border); color: var(--jupiter-text-secondary);
+}
+.account-action-button.disconnect:hover {
+    background-color: var(--error-bg); color: var(--error-text);
+    border-color: var(--error-text); transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 15px rgba(252, 76, 76, 0.15);
+}
+/* Gaya alternatif untuk tombol 'Gunakan Saldo Maksimal' (Small Pill) */
+.link-button {
+  background-color: var(--button-secondary-bg, rgba(255, 255, 255, 0.08)); /* Latar belakang halus */
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.15)); /* Border halus (opsional) */
+  /* Atau gunakan border saja: */
+  /* background-color: transparent; */
+  /* border: 1px solid var(--accent-color, #a656f7); */
+  padding: 6px 14px; /* Padding tombol */
+  margin-top: 8px; /* Jarak dari input */
+  color: var(--text-color-secondary, #ccc); /* Warna teks */
+   /* Jika menggunakan border saja, warna teks mungkin warna aksen: */
+  /* color: var(--accent-color, #a656f7); */
+  cursor: pointer;
+  border-radius: 20px; /* Membuat sudut sangat membulat (pill shape) */
+  font-size: 0.8em; /* Ukuran font lebih kecil */
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-block;
+  text-align: center;
+}
+
+.link-button:hover:not(:disabled) {
+  background-color: var(--button-secondary-bg-hover, rgba(255, 255, 255, 0.12));
+  border-color: var(--button-secondary-border-hover, rgba(255, 255, 255, 0.25));
+  /* Jika border saja: */
+  /* background-color: var(--accent-color-hover-bg, rgba(166, 86, 247, 0.1)); */
+  /* border-color: var(--accent-color-hover, #c74cfc); */
+  /* color: var(--accent-color-hover, #c74cfc); */
+  transform: translateY(-1px); /* Efek sedikit naik saat hover */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Shadow halus (opsional) */
+}
+
+.link-button:active:not(:disabled) {
+  transform: translateY(0px); /* Kembali ke posisi saat diklik */
+   box-shadow: none;
+}
+
+.link-button:disabled {
+  background-color: var(--button-disabled-bg, rgba(255, 255, 255, 0.05));
+  border-color: var(--button-disabled-border, rgba(255, 255, 255, 0.1));
+  color: var(--text-color-disabled, #6c757d);
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+/* --- Styling untuk Dropdown Modern --- */
+
+/* Opsional: Styling untuk pembungkus .form-group */
+.form-group {
+  position: relative; /* Diperlukan untuk posisi panah kustom */
+  margin-bottom: 20px; /* Jarak antar elemen form */
+}
+
+/* Styling untuk label */
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text-color-secondary, #adb5bd); /* Warna label (abu-abu muda) */
+  font-size: 0.9em;
+}
+
+/* Styling utama untuk elemen select */
+select#destination-chain {
+  /* Reset tampilan bawaan browser */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Ukuran & Box Model */
+  display: block; /* Agar memenuhi lebar container */
+  width: 100%;
+  padding: 12px 40px 12px 15px; /* Atas/Bawah | Kanan (untuk panah) | Kiri */
+  line-height: 1.6; /* Jarak antar baris */
+  font-size: 1em; /* Ukuran font */
+
+  /* Warna & Latar Belakang */
+  color: var(--text-color-primary, #e9ecef); /* Warna teks terpilih */
+  background-color: var(--input-bg-color, #2a2f45); /* Warna latar (samakan dengan input lain) */
+  /* background-color: transparent; */ /* Alternatif: transparan */
+
+  /* Border & Radius */
+  border: 1px solid var(--input-border-color, #495057); /* Warna border */
+  border-radius: 8px; /* Sudut membulat */
+
+  /* Lainnya */
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Styling saat select mendapatkan fokus */
+select#destination-chain:focus {
+  border-color: var(--accent-color, #a656f7); /* Warna border aksen saat fokus */
+  box-shadow: 0 0 0 3px var(--focus-shadow-color, rgba(166, 86, 247, 0.25)); /* Efek glow saat fokus */
+  outline: none; /* Hapus outline default browser */
+}
+
+/* Styling saat select disabled */
+select#destination-chain:disabled {
+  background-color: var(--input-disabled-bg, #343a40); /* Warna latar saat disabled */
+  border-color: var(--input-disabled-border, #495057);
+  color: var(--text-color-disabled, #6c757d);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Ubah warna panah saat select
+
+/* Info & Saldo Gabungan di Sidebar */
+/* .info-balance-card h2 { } */
+.info-balance-content { display: flex; flex-direction: column; gap: 18px; }
+.info-balance-content > div:first-child { flex: none; }
+.info-balance-content p {
+  margin: 5px 0; color: var(--jupiter-text-secondary); font-size: 0.98em;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.info-balance-content p strong {
+    color: var(--jupiter-text-secondary); font-weight: 400; margin-right: 15px; opacity: 0.8;
+}
+.info-balance-content p span {
+    text-align: right; font-weight: 500; color: var(--jupiter-text-primary);
+}
+.saldo-box {
+  display: flex; flex-direction: column; align-items: flex-start;
+  border-left: none; padding-left: 0; margin-top: 10px; padding-top: 15px;
+  border-top: 1px solid var(--jupiter-border); width: 100%;
+}
+.saldo-label {
+  color: var(--jupiter-text-secondary); font-size: 0.9em; margin-bottom: 4px;
+  font-weight: 500; text-align: left;
+}
+.saldo-value {
+  font-size: 1.9em; font-weight: 700; color: var(--jupiter-gradient-end);
+  text-align: left; margin-top: 0;
+}
+
+/* Kartu Aksi (Transfer & Mint) */
+.action-card { flex-grow: 1; }
+/* .action-card h2 { } */
+/* Penyesuaian untuk kartu Mint di dalam .account-info */
+.account-info .action-card {
+    /* Kembalikan style kartu standar karena sekarang berdiri sendiri di kolom kanan */
+    background: linear-gradient(145deg, rgba(42, 46, 69, 0.9) 0%, rgba(38, 42, 60, 0.95) 100%);
+    backdrop-filter: blur(15px) saturate(150%);
+    border-radius: 16px; border: 1px solid var(--jupiter-border);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+    padding: 25px 28px;
+    margin-bottom: 0; /* Tidak perlu margin bawah ganda */
+    height: auto; /* Jangan paksa height 100% */
+}
+.account-info .action-card:hover {
+    transform: translateY(-4px); /* Aktifkan hover lagi */
+    box-shadow: 0 12px 35px #b561f733;
+    border-color: var(--jupiter-gradient-mid);
+}
+
+
+/* Formulir */
+form { margin-top: 15px; display: flex; flex-direction: column; flex-grow: 1; }
+form div { margin-bottom: 16px; }
+form label {
+  display: block; margin-bottom: 8px; font-weight: 500;
+  color: var(--jupiter-text-secondary); font-size: 0.9em;
+}
+form input[type="text"],
+form input[type="number"] {
+  width: calc(100% - 30px); padding: 13px 15px;
+  border: 1px solid var(--jupiter-border); border-radius: 8px;
+  font-size: 15px; background-color: var(--jupiter-bg-input);
+  color: var(--jupiter-text-primary);
+  transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+ form input[type="text"]::placeholder,
+ form input[type="number"]::placeholder {
+     color: var(--jupiter-text-secondary); opacity: 0.6;
+ }
+form input[type="text"]:focus,
+form input[type="number"]:focus {
+  border-color: var(--jupiter-gradient-mid);
+  background-color: var(--jupiter-bg-card); outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 109, 255, 0.6); /* Glow lebih intens */
+}
+form button.action-button { margin-top: auto; padding-top: 13px; } /* Dorong tombol ke bawah */
+
+
+/* Kartu Hero di Tengah */
+.hero-card {
+  padding: 30px 35px 35px 35px; max-width: 520px; text-align: center;
+  height: 100%;
+}
+.token-logo {
+  margin-bottom: 15px; display: inline-block; position: relative; z-index: 1;
+}
+.token-logo::before {
+    content: ''; position: absolute; top: 50%; left: 50%; width: 100px; height: 100px;
+    background: radial-gradient(circle, #a656f74d 0%, #a656f700 70%);
+    border-radius: 50%; transform: translate(-50%, -50%); z-index: -1; opacity: 0.7;
+}
+.token-logo span {
+    font-size: 3.5rem; display: block; position: relative; z-index: 2;
+}
+.hero-title {
+  font-size: 1.7em; font-weight: 700; margin-bottom: 10px;
+  letter-spacing: 0.5px; line-height: 1.3; color: var(--jupiter-text-primary);
+}
+.hero-title span { color: var(--jupiter-gradient-end); }
+.hero-slogan {
+  color: var(--jupiter-text-secondary); font-size: 1.05em;
+  margin-bottom: 20px; font-weight: 400; line-height: 1.6;
+}
+
+/* === Styling Stats Card (Versi Terakhir) === */
+.stats-card {
+  background: rgba(26, 29, 46, 0.7); /* Background lebih gelap & transparan */
+  border-radius: 12px;
+  padding: 18px 25px; /* Padding lebih besar */
+  margin-top: 25px; /* Jarak dari slogan */
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: space-between; /* Dorong ke tepi */
+  gap: 20px; /* Jarak antar stat */
+  border: 1px solid var(--jupiter-border);
+  border-left: 3px solid var(--jupiter-gradient-mid); /* Aksen border kiri */
+  border-right: 3px solid var(--jupiter-gradient-mid); /* Aksen border kanan */
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Rata kiri label & value */
+  flex-grow: 1; /* Biarkan mengisi ruang */
+  flex-basis: 0; /* Mulai dari basis 0 */
+  min-width: 100px; /* Lebar minimum tiap stat */
+}
+.stat:last-child {
+    align-items: flex-end; /* Stat terakhir rata kanan */
+}
+.stat:last-child .stat-label,
+.stat:last-child .stat-value {
+    text-align: right; /* Teks stat terakhir rata kanan */
+}
+.stat-label {
+  color: var(--jupiter-text-secondary);
+  font-size: 0.8em; /* Label sangat kecil */
+  margin-bottom: 6px; /* Jarak ke value */
+  font-weight: 500;
+  text-transform: uppercase; /* Uppercase label */
+  letter-spacing: 0.5px;
+  opacity: 0.8; /* Sedikit pudar */
+}
+.stat-value {
+  color: var(--jupiter-text-primary);
+  font-size: 1.25em; /* Ukuran value lebih besar */
+  font-weight: 600; /* Lebih tebal */
+  font-family: 'Roboto Mono', monospace; /* Font monospace untuk angka */
+  line-height: 1.2; /* Atur tinggi baris jika angka panjang */
+  word-break: break-all; /* Pecah jika terlalu panjang */
+}
+/* ==================================== */
+
+.quick-actions {
+  margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+}
+.quick-actions button.action-button {
+    width: auto; margin: 0; padding: 9px 18px; font-size: 13px; border-radius: 8px;
+}
+
+.hero-extra-info { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--jup-border); text-align: center; flex-grow: 0; } /* Pastikan text-align center */
+.hero-extra-info h4 { font-size: 1em; font-weight: 600; color: var(--jup-text-secondary); margin-bottom: 12px; letter-spacing: 0.5px; }
+.hero-extra-info p {
+    font-size: 0.95em; color: var(--jup-text-secondary); line-height: 1.6;
+    margin-bottom: 20px; opacity: 0.9; max-width: 400px; margin-left: auto; margin-right: auto;
+    text-align: center; /* PERBAIKAN: Tambahkan text-align center di sini */
+}
+.hero-links-container {
+    display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+}
+.hero-link {
+    color: var(--jupiter-gradient-end); background-color: rgba(139, 109, 255, 0.1);
+    text-decoration: none; font-weight: 500; padding: 7px 14px; border-radius: 8px;
+    font-size: 0.9em; border: 1px solid rgba(139, 109, 255, 0.3);
+    transition: all 0.3s ease; display: inline-flex; align-items: center;
+}
+.hero-link:hover {
+    color: var(--jupiter-text-primary); background-color: #8b6dff40;
+    border-color: rgba(139, 109, 255, 0.6); transform: translateY(-2px);
+    box-shadow: 0 3px 10px #8b6dff33;
+}
+
+
+/* Pesan Status */
+.tx-status {
+  margin-top: 20px; padding: 12px 18px; border-radius: 8px;
+  font-weight: 500; text-align: center; font-size: 0.95em;
+  max-width: 650px; margin-left: auto; margin-right: auto;
+}
+.tx-status.success { background-color: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-text); }
+.tx-status.error { background-color: var(--error-bg); color: var(--error-text); border: 1px solid var(--error-text); }
+
+/* Lain-lain */
+hr, .connection-info { display: none; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(22, 24, 37, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; animation: fadeIn 0.3s ease forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+.modal-content {
+   background: var(--jup-bg-card); color: var(--jup-text-primary); padding: 35px 30px 30px 30px;
+   border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); text-align: center;
+   min-width: 340px; max-width: 450px; width: 90%; border: 1px solid var(--jup-border);
+   animation: modalPop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
+}
+@keyframes modalPop { 0% { transform: scale(0.9) translateY(10px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+.modal-content h2 { margin-top: 0; color: var(--jup-text-primary); font-size: 1.4em; font-weight: 600; margin-bottom: 15px; border-bottom: none; text-align: center; }
+.modal-content p { color: var(--jup-text-secondary); font-size: 1em; line-height: 1.6; margin-bottom: 30px; text-align: center; }
+.modal-action {
+   /* Tombol di modal pakai aksen lime */
+   background-color: var(--jup-accent-lime); background-image: none;
+   color: var(--jup-text-on-accent); border: none; padding: 12px 28px; border-radius: 10px;
+   font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+   box-shadow: 0 4px 12px rgba(199, 242, 132, 0.2); display: inline-block; width: auto; min-width: 150px;
+}
+.modal-action:hover {
+   background-color: var(--jup-accent-lime-dark); transform: translateY(-2px);
+   box-shadow: 0 6px 18px rgba(139, 109, 255, 0.6);
+}
+/* Styling Halaman Docs & About */
+.page-container { background: var(--jup-bg-card); backdrop-filter: blur(15px) saturate(150%); -webkit-backdrop-filter: blur(15px) saturate(150%); padding: 35px 45px; border-radius: 20px; border: 1px solid var(--jup-border); box-shadow: var(--card-shadow); margin: 25px auto; max-width: 950px; animation: pageFadeIn 0.5s ease-out; }
+@keyframes pageFadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.page-container h1 { font-size: 2em; font-weight: 700; color: var(--jup-text-primary); border-bottom: 1px solid var(--jup-border);
+padding-bottom: 18px; margin-bottom: 35px; text-align: center; display: flex; align-items: center; justify-content: center; background: none; -webkit-background-clip: unset; -webkit-text-fill-color: some-value; background-clip: unset; text-fill-color: some-value; color: some-value;  }
+.page-container p, .page-container li { color: var(--jup-text-secondary); line-height: 1.7; font-size: 1.05em; margin-bottom: 1.1em; }
+.page-container strong { color: var(--jup-text-primary); font-weight: 600; }
+.page-container a { color: var(--jup-accent-lime); text-decoration: none; font-weight: 500; transition: color 0.3s, text-shadow 0.3s; } /* Link pakai lime */
+.page-container a:hover { color: var(--jup-accent-lime-dark); text-shadow: 0 0 5px var(--jup-accent-lime); text-decoration: none; }
+.page-container ul, .page-container ol { padding-left: 30px; margin-top: 0.5em; margin-bottom: 1.5em; }
+.page-container li { margin-bottom: 0.8em; }
+.page-container li::marker { color: var(--jup-accent-lime); font-weight: bold; font-size: 1.1em; }
+.list-icon { margin-right: 10px; font-size: 1.1em; opacity: 0.9; }
+.docs-section, .about-section { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px dashed var(--jup-border); }
+.docs-section:last-child, .about-section:last-child { border-bottom: none; margin-bottom: 0; }
+.docs-section h2, .about-section h2, .docs-section h3, .about-section h3 { font-size: 1.5em; color: var(--jup-text-primary); border-bottom: none; padding-bottom: 0; margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.docs-section h3, .about-section h3 { font-size: 1.25em; color: var(--jup-text-secondary); margin-top: 25px; margin-bottom: 15px; }
+.section-icon { font-size: 1.2em; opacity: 0.9; }
+.code-block-container { position: relative; margin: 1.5em 0; }
+.code-block { background-color: var(--code-bg); color: #c3c7d7; padding: 20px 25px; border-radius: 10px; overflow-x: auto; font-family: 'Roboto Mono', monospace; font-size: 0.95em; line-height: 1.7; border: 1px solid var(--jup-border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); white-space: pre-wrap; word-wrap: break-word; }
+.copy-button { position: absolute; top: 12px; right: 12px; background: rgba(53, 58, 85, 0.8); color: var(--jup-text-secondary); border: 1px solid var(--jup-border); padding: 5px 10px; font-size: 0.85em; border-radius: 6px; cursor: pointer; opacity: 0.8; transition: all 0.2s ease; backdrop-filter: blur(3px); }
+.copy-button:hover { opacity: 1; background: var(--jup-bg-input); color: var(--jup-text-primary); }
+.copy-button:active { transform: scale(0.95); }
+.section-toggle { background: none; border: none; padding: 0; margin: 0; cursor: pointer; width: 100%; text-align: left; color: inherit; }
+.section-toggle h2 { display: flex; align-items: center; margin-bottom: 15px; transition: color 0.3s ease; padding-bottom: 10px; border-bottom: 1px solid transparent; }
+.section-toggle:hover h2 { color: var(--jup-accent-lime); border-bottom-color: var(--jup-accent-lime); } /* Hover pakai lime */
+.toggle-arrow { display: inline-block; margin-right: 15px; font-size: 0.8em; transition: transform 0.3s ease-in-out; color: var(--jup-accent-lime); } /* Panah pakai lime */
+.toggle-arrow.open { transform: rotate(90deg); }
+.section-content { overflow: hidden; transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.4s ease-in-out, padding-bottom 0.4s ease-in-out; max-height: 0; opacity: 0; padding-left: 25px; border-left: 2px solid var(--jup-border); margin-left: 10px; margin-top: 0; padding-bottom: 0; }
+.docs-section.open .section-content { max-height: 2500px; opacity: 1; margin-top: 15px; padding-bottom: 20px; }
+.definition-list dt { color: var(--jup-text-primary); font-weight: 600; margin-top: 1.2em; font-size: 1.1em; }
+.definition-list dd { margin-left: 1.5em; margin-bottom: 1em; color: var(--jup-text-secondary); font-size: 1.05em; border-left: 2px solid var(--jup-accent-lime); padding-left: 1em; } /* Aksen lime */
+.code-inline { font-family: 'Roboto Mono', monospace; background-color: var(--code-bg); padding: 0.25em 0.5em; border-radius: 4px; font-size: 0.9em; color: var(--jup-accent-lime); border: 1px solid var(--jup-border); } /* Kode inline pakai lime */
+.about-page .about-subtitle { text-align: center; font-size: 1.25em; color: var(--jup-text-secondary); margin-top: -25px; margin-bottom: 45px; font-weight: 500; }
+.about-section { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px dashed var(--jup-border); }
+.about-section:last-child { border-bottom: none; margin-bottom: 0; }
+.about-section h2 { font-size: 1.5em; color: var(--jup-text-primary); border-bottom: none; padding-bottom: 0; margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.team-section h2 { text-align: center; }
+.team-members { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-top: 30px; }
+.team-member { background-color: var(--jup-bg-input); padding: 28px 25px; border-radius: 12px; text-align: center; border: 1px solid var(--jup-border); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.team-member:hover { transform: translateY(-6px); box-shadow: 0 8px 25px rgba(0,0,0,0.25); }
+.member-avatar { font-size: 3.5em; margin-bottom: 15px; line-height: 1; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: auto; margin-right: auto; /* background: linear-gradient(135deg, var(--jup-gradient-start), var(--jup-gradient-end)); */ background-color: var(--jup-bg-card); box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid var(--jup-border); }
+.member-name { font-weight: 600; color: var(--jup-text-primary); margin-bottom: 6px; font-size: 1.15em; }
+.member-role { font-size: 0.9em; color: var(--jup-text-secondary); margin-bottom: 12px; }
+.member-social a { color: var(--jup-text-secondary); font-size: 0.85em; margin: 0 5px; text-decoration: none; transition: color 0.3s; }
+.member-social a:hover { color: var(--jup-accent-lime); } /* Link sosial pakai lime */
+.tech-list { list-style: none; padding-left: 0; }
+.tech-list li { background-color: var(--jup-bg-input); margin-bottom: 12px; padding: 15px 20px; border-radius: 8px; border-left: 5px solid var(--jup-accent-lime); font-size: 1em; color: var(--jup-text-primary); display: flex; align-items: center; transition: background-color 0.3s, border-left-color 0.3s; } /* Aksen lime */
+.tech-list li:hover { background-color: var(--jup-bg-card); border-left-color: var(--jup-accent-lime-dark); }
+.tech-icon { margin-right: 15px; font-size: 1.3em; opacity: 0.9; }
+.roadmap-list { list-style: none; padding-left: 0; position: relative; }
+.roadmap-list::before { content: ''; position: absolute; left: 10px; top: 10px; bottom: 10px; width: 3px; background-color: var(--jup-border); border-radius: 2px; }
+.roadmap-item { position: relative; padding-left: 40px; margin-bottom: 25px; }
+.roadmap-item::before { content: ''; position: absolute; left: 0px; top: 5px; width: 20px; height: 20px; border-radius: 50%; background-color: var(--jup-bg-dark); border: 3px solid var(--jup-accent-lime); z-index: 1; } /* Titik pakai lime */
+.roadmap-item.done::before { border-color: var(--connected-green); }
+.roadmap-item.current::before { border-color: var(--jup-accent-lime); box-shadow: 0 0 10px var(--jup-accent-lime); } /* Glow lime */
+.roadmap-item span { display: block; font-weight: 600; color: var(--jup-text-primary); margin-bottom: 5px; font-size: 1.1em; }
+.roadmap-item { color: var(--jupiter-text-secondary); font-size: 1em; }
+.roadmap-item { color: var(--jupiter-text-secondary); font-size: 1em; }
+
+
+/* Media Queries */
+@media (max-width: 1200px) { /* ... (Sama) ... */ }
+@media (max-width: 992px) { /* ... (Sama) ... */ }
+@media (max-width: 576px) { /* ... (Sama) ... */ }
+
