@@ -18,6 +18,8 @@ Hardhat JSON-RPC node (127.0.0.1:8545, chain ID 31337)
           +--> StakingContract
 ```
 
+![TokenLocal local development architecture](assets/tokenlocal-architecture.svg)
+
 There is no backend service, database, indexer, hosted RPC provider, or public-network configuration in the repository. The wallet signs every state-changing operation and the Hardhat node owns all chain state for the current local session.
 
 ## Repository layout

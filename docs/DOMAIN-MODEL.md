@@ -74,6 +74,8 @@ Invariant: a non-owner must never be able to mint. Conversely, the owner can min
 
 ## Staking state model
 
+![Staking lifecycle](assets/staking-lifecycle.svg)
+
 | State | Meaning |
 | --- | --- |
 | `totalStaked` | Sum of principal attributed to all users. |

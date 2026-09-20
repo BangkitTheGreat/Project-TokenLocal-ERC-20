@@ -1,8 +1,18 @@
 # TokenLocal ERC-20 & Staking DApp
 
+![Solidity](https://img.shields.io/badge/Solidity-0.8-363636?logo=solidity&logoColor=white)
+![Hardhat](https://img.shields.io/badge/Hardhat-tested-yellow?logo=hardhat&logoColor=black)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![ethers.js](https://img.shields.io/badge/ethers.js-v6-2535A0)
+![Tests](https://img.shields.io/badge/tests-8%20passing-brightgreen)
+![Network](https://img.shields.io/badge/network-local%20only-orange)
+![Status](https://img.shields.io/badge/status-educational%2C%20not%20audited-red)
+
 TokenLocal is a local-first Web3 learning project for the full smart-contract workflow: write Solidity, compile, test, deploy to a private Hardhat chain, and interact through a React dApp with a browser wallet.
 
 It includes an ERC-20 token with owner-controlled minting, an experimental TKL staking pool with time-based rewards, a Hardhat/TypeScript toolchain, and a React + ethers v6 interface.
+
+![Animated local transaction flow](docs/assets/local-flow.svg)
 
 > Important: this is an educational local-development project. It has no audit, public-network configuration, production access control, monitoring, or operational safeguards. Do not deploy it unchanged to a public network or use it with real assets.
 
@@ -33,6 +43,8 @@ It includes an ERC-20 token with owner-controlled minting, an experimental TKL s
 - ABI/address metadata handoff from deployment tooling to the frontend.
 
 ## Quick start
+
+![Local development workflow](docs/assets/development-workflow.svg)
 
 Prerequisites:
 
@@ -135,6 +147,8 @@ docs/
 3. The user stakes, which transfers approved TKL into the pool.
 4. Reward accrues according to stake share, elapsed time, and the global rate.
 5. The user can claim reward and withdraw principal subject to pool liquidity and contract state.
+
+![Staking lifecycle](docs/assets/staking-lifecycle.svg)
 
 The pool uses TKL for both staked principal and reward payment. Funding and owner withdrawal must therefore be managed carefully. See [Security notes](docs/SECURITY.md).
 

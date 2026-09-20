@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="430" viewBox="0 0 1200 430" role="img" aria-labelledby="title desc">
+  <title id="title">TokenLocal development workflow</title>
+  <desc id="desc">A development workflow from install to local node, deployment, wallet interaction, and verification.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#071426"/><stop offset="1" stop-color="#120b2a"/></linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M 32 0 L 0 0 0 32" fill="none" stroke="#263655" stroke-width="0.55" opacity="0.72"/></pattern>
+    <linearGradient id="flow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#60a5fa"/></linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#60a5fa"/></marker>
+    <style>.title{font:700 29px Inter,Arial,sans-serif;fill:#f8fafc}.subtitle{font:15px Inter,Arial,sans-serif;fill:#94a3b8}.label{font:700 17px Inter,Arial,sans-serif;fill:#e2e8f0}.code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;fill:#a7f3d0}.small{font:12px Inter,Arial,sans-serif;fill:#a5b4cf}.step{font:700 14px Inter,Arial,sans-serif;fill:#062116}</style>
+  </defs>
+  <rect width="1200" height="430" rx="24" fill="url(#bg)"/><rect width="1200" height="430" rx="24" fill="url(#grid)" opacity="0.78"/>
+  <circle cx="72" cy="65" r="7" fill="#34d399"/><text x="92" y="74" class="title">Local Development Workflow</text><text x="92" y="100" class="subtitle">Repeatable loop for safe learning, iteration, and local verification.</text>
+  <path d="M241 247 H295 M441 247 H495 M641 247 H695 M841 247 H895" fill="none" stroke="url(#flow)" stroke-width="3" marker-end="url(#arrow)"/>
+  <g transform="translate(65 177)"><rect width="176" height="140" rx="17" fill="#0b2e28" stroke="#34d399" stroke-width="2"/><circle cx="29" cy="29" r="17" fill="#6ee7b7"/><text x="24" y="34" class="step">1</text><text x="23" y="74" class="label">Install</text><text x="23" y="103" class="code">npm ci</text><text x="23" y="125" class="small">root + frontend</text></g>
+  <g transform="translate(295 177)"><rect width="176" height="140" rx="17" fill="#0c2839" stroke="#22d3ee" stroke-width="2"/><circle cx="29" cy="29" r="17" fill="#67e8f9"/><text x="24" y="34" class="step">2</text><text x="23" y="74" class="label">Verify</text><text x="23" y="103" class="code">hardhat test</text><text x="23" y="125" class="small">compile · test · typecheck</text></g>
+  <g transform="translate(525 177)"><rect width="176" height="140" rx="17" fill="#261f3f" stroke="#a78bfa" stroke-width="2"/><circle cx="29" cy="29" r="17" fill="#c4b5fd"/><text x="24" y="34" class="step">3</text><text x="23" y="74" class="label">Run node</text><text x="23" y="103" class="code">npm run node</text><text x="23" y="125" class="small">Hardhat · chain 31337</text></g>
+  <g transform="translate(755 177)"><rect width="176" height="140" rx="17" fill="#30200f" stroke="#fbbf24" stroke-width="2"/><circle cx="29" cy="29" r="17" fill="#fcd34d"/><text x="24" y="34" class="step">4</text><text x="23" y="74" class="label">Deploy</text><text x="23" y="103" class="code">deploy:local</text><text x="23" y="125" class="small">refresh ABI + addresses</text></g>
+  <g transform="translate(985 177)"><rect width="150" height="140" rx="17" fill="#371638" stroke="#f0abfc" stroke-width="2"/><circle cx="29" cy="29" r="17" fill="#f0abfc"/><text x="24" y="34" class="step">5</text><text x="23" y="74" class="label">Exercise</text><text x="23" y="103" class="code">npm start</text><text x="23" y="125" class="small">wallet smoke test</text></g>
+  <text x="65" y="370" class="small">Hardhat state is ephemeral. Restarting the local node requires a fresh deployment and regenerated frontend contract metadata.</text>
+</svg>

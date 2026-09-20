@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">TokenLocal local development architecture</title>
+  <desc id="desc">MetaMask connects through a React dApp to a local Hardhat node, which hosts the TokenLocal ERC-20 and StakingContract contracts.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071426"/>
+      <stop offset="1" stop-color="#120b2a"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#263655" stroke-width="0.55" opacity="0.72"/>
+    </pattern>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#67e8f9"/>
+    </marker>
+    <marker id="arrowViolet" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#c4b5fd"/>
+    </marker>
+    <style>
+      .title { font: 700 29px Inter, Arial, sans-serif; fill: #f8fafc; }
+      .subtitle { font: 15px Inter, Arial, sans-serif; fill: #94a3b8; }
+      .label { font: 700 17px Inter, Arial, sans-serif; fill: #e2e8f0; }
+      .small { font: 13px Inter, Arial, sans-serif; fill: #a5b4cf; }
+      .micro { font: 12px Inter, Arial, sans-serif; fill: #7dd3fc; }
+    </style>
+  </defs>
+  <rect width="1200" height="560" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="560" rx="24" fill="url(#grid)" opacity="0.78"/>
+  <circle cx="72" cy="66" r="7" fill="#34d399" filter="url(#glow)"/>
+  <text x="92" y="74" class="title">TokenLocal Local Stack</text>
+  <text x="92" y="100" class="subtitle">An educational ERC-20 and staking workflow on Hardhat Network · chain ID 31337</text>
+
+  <!-- connections first -->
+  <path d="M326 301 C370 301 384 301 430 301" fill="none" stroke="#67e8f9" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M707 260 C756 238 762 190 812 190" fill="none" stroke="#c4b5fd" stroke-width="3" marker-end="url(#arrowViolet)"/>
+  <path d="M707 342 C754 367 762 406 812 406" fill="none" stroke="#c4b5fd" stroke-width="3" marker-end="url(#arrowViolet)"/>
+  <text x="345" y="281" class="micro">JSON-RPC · signed transactions</text>
+  <text x="721" y="228" class="micro">ERC-20 calls</text>
+  <text x="721" y="380" class="micro">stake · rewards</text>
+
+  <!-- wallet -->
+  <g>
+    <rect x="70" y="226" width="256" height="150" rx="18" fill="#0c2032" stroke="url(#cyan)" stroke-width="2"/>
+    <rect x="92" y="251" width="55" height="55" rx="15" fill="#164e63" stroke="#67e8f9"/>
+    <path d="M107 272 h25 a7 7 0 0 1 0 14 h-25z" fill="none" stroke="#a5f3fc" stroke-width="3"/>
+    <circle cx="127" cy="279" r="2.8" fill="#a5f3fc"/>
+    <text x="165" y="273" class="label">MetaMask Wallet</text>
+    <text x="165" y="298" class="small">EIP-1193 provider</text>
+    <text x="92" y="339" class="small">Signs transfers, approvals,</text>
+    <text x="92" y="359" class="small">staking, and owner actions</text>
+  </g>
+
+  <!-- ui -->
+  <g>
+    <rect x="430" y="198" width="277" height="205" rx="18" fill="#0b2737" stroke="url(#cyan)" stroke-width="2"/>
+    <rect x="453" y="224" width="231" height="37" rx="9" fill="#123b52"/>
+    <circle cx="474" cy="242" r="6" fill="#22d3ee"/>
+    <rect x="489" y="234" width="75" height="7" rx="3.5" fill="#bae6fd"/>
+    <rect x="489" y="247" width="52" height="5" rx="2.5" fill="#5d88a0"/>
+    <rect x="453" y="278" width="105" height="92" rx="10" fill="#0e3548"/>
+    <rect x="574" y="278" width="110" height="25" rx="8" fill="#164e63"/>
+    <rect x="574" y="315" width="110" height="25" rx="8" fill="#164e63"/>
+    <rect x="574" y="352" width="75" height="18" rx="8" fill="#0891b2"/>
+    <text x="453" y="176" class="label">React dApp</text>
+    <text x="453" y="426" class="small">ethers v6 · token actions · staking UI</text>
+  </g>
+
+  <!-- hardhat boundary -->
+  <g>
+    <rect x="760" y="130" width="370" height="340" rx="22" fill="#12132a" fill-opacity="0.75" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="8 7"/>
+    <text x="788" y="164" class="label">Hardhat Local Network</text>
+    <text x="788" y="185" class="small">127.0.0.1:8545 · ephemeral chain state</text>
+
+    <rect x="812" y="207" width="264" height="112" rx="15" fill="#251c49" stroke="url(#violet)" stroke-width="2"/>
+    <circle cx="847" cy="245" r="18" fill="#6d28d9"/>
+    <path d="M838 245 h18 M847 236 v18" stroke="#ede9fe" stroke-width="3" stroke-linecap="round"/>
+    <text x="884" y="244" class="label">TokenLocal</text>
+    <text x="884" y="267" class="small">ERC-20 · TKL · Ownable mint</text>
+    <text x="838" y="296" class="micro">balances · allowances · transfers</text>
+
+    <rect x="812" y="353" width="264" height="91" rx="15" fill="#251c49" stroke="url(#violet)" stroke-width="2"/>
+    <circle cx="847" cy="388" r="18" fill="#7c3aed"/>
+    <path d="M847 374 v28 M835 386 h24" stroke="#ede9fe" stroke-width="3" stroke-linecap="round"/>
+    <text x="884" y="386" class="label">StakingContract</text>
+    <text x="884" y="409" class="small">reward-per-token accounting</text>
+    <text x="838" y="430" class="micro">approve → stake → claim → withdraw</text>
+  </g>
+
+  <rect x="70" y="494" width="1060" height="1" fill="#334155"/>
+  <circle cx="93" cy="522" r="5" fill="#22d3ee"/><text x="107" y="527" class="small">frontend / wallet flow</text>
+  <circle cx="299" cy="522" r="5" fill="#a78bfa"/><text x="313" y="527" class="small">on-chain contracts</text>
+  <circle cx="500" cy="522" r="5" fill="#fbbf24"/><text x="514" y="527" class="small">local-only boundary</text>
+  <text x="880" y="527" class="small">No backend · no public RPC · no real assets</text>
+</svg>

@@ -1,0 +1,26 @@
+<!-- TokenLocal documentation animation: uses only SVG/CSS, no JavaScript or external dependencies. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="230" viewBox="0 0 1200 230" role="img" aria-labelledby="title desc">
+  <title id="title">Animated TokenLocal transaction flow</title>
+  <desc id="desc">An animated token dot moves from wallet through the React dApp and Hardhat node to the token and staking contracts.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#071426"/><stop offset="1" stop-color="#150d30"/></linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#c4b5fd"/></linearGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <style>
+      .title{font:700 21px Inter,Arial,sans-serif;fill:#f8fafc}.label{font:700 15px Inter,Arial,sans-serif;fill:#e2e8f0}.small{font:12px Inter,Arial,sans-serif;fill:#a5b4cf}
+      .pulse{transform-origin:center;animation:pulse 2.2s ease-in-out infinite}.packet{animation:travel 5s linear infinite}.packet2{animation:travel 5s linear 2.5s infinite}
+      @keyframes pulse{0%,100%{opacity:.55;transform:scale(.93)}50%{opacity:1;transform:scale(1.08)}}
+      @keyframes travel{0%{offset-distance:0%;opacity:0}7%{opacity:1}83%{opacity:1}100%{offset-distance:100%;opacity:0}}
+      @media (prefers-reduced-motion: reduce){.pulse,.packet,.packet2{animation:none}}
+    </style>
+  </defs>
+  <rect width="1200" height="230" rx="22" fill="url(#bg)"/>
+  <text x="44" y="43" class="title">Live local flow</text><text x="44" y="66" class="small">Wallet signatures travel through the dApp to the local chain. Animation stops when reduced motion is enabled.</text>
+  <path id="route" d="M210 142 C360 142 385 142 510 142 S720 142 890 142 S1000 142 1080 142" fill="none" stroke="url(#line)" stroke-width="3" stroke-dasharray="8 8" opacity=".82"/>
+  <g><rect x="45" y="102" width="165" height="80" rx="15" fill="#12354a" stroke="#22d3ee" stroke-width="1.5"/><circle cx="80" cy="142" r="14" fill="#164e63" stroke="#a5f3fc"/><path d="M71 142h17" stroke="#a5f3fc" stroke-width="2.5"/><text x="105" y="137" class="label">Wallet</text><text x="105" y="158" class="small">MetaMask</text></g>
+  <g><rect x="510" y="102" width="185" height="80" rx="15" fill="#12354a" stroke="#22d3ee" stroke-width="1.5"/><circle cx="545" cy="142" r="14" fill="#164e63" stroke="#a5f3fc"/><text x="570" y="137" class="label">React dApp</text><text x="570" y="158" class="small">ethers v6</text></g>
+  <g><rect x="890" y="102" width="165" height="80" rx="15" fill="#271f49" stroke="#a78bfa" stroke-width="1.5"/><circle class="pulse" cx="925" cy="142" r="14" fill="#7c3aed"/><text x="950" y="137" class="label">Hardhat</text><text x="950" y="158" class="small">chain 31337</text></g>
+  <g><rect x="1055" y="102" width="110" height="80" rx="15" fill="#351b4a" stroke="#f0abfc" stroke-width="1.5"/><text x="1075" y="137" class="label">TKL</text><text x="1075" y="158" class="small">contracts</text></g>
+  <circle class="packet" r="8" fill="#67e8f9" filter="url(#glow)" style="offset-path:path('M210 142 C360 142 385 142 510 142 S720 142 890 142 S1000 142 1080 142')"/>
+  <circle class="packet2" r="5" fill="#f0abfc" filter="url(#glow)" style="offset-path:path('M210 142 C360 142 385 142 510 142 S720 142 890 142 S1000 142 1080 142')"/>
+</svg>

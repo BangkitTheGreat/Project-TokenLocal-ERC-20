@@ -24,6 +24,8 @@ Use `npm ci` for a clean reproducible install. If a dependency is intentionally 
 
 ## Run locally
 
+![Local development workflow](assets/development-workflow.svg)
+
 The local stack needs three processes.
 
 Terminal one — start Hardhat’s persistent local chain:
