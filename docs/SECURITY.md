@@ -79,11 +79,11 @@ Each defect was committed as a failing test first, then fixed in the following c
 
 | Issue | Closed by | Proven by |
 |---|---|---|
-| Owner could withdraw user stake principal through `withdrawExcessReward` | `6e32bcf` | `test/StakingContract.ts` (failing at `e326f48`) |
-| Unfunded emission of roughly 3.15M TKL per year against a 1M supply, with no period end | `e899b2f` | `test/StakingRewardPeriod.ts` |
-| Accrued but unclaimed rewards were still withdrawable by the owner | `a6cac53` | `test/StakingReserve.ts` |
-| Manual reentrancy lock, unchecked ERC-20 return values, single-step ownership, open `renounceOwnership()` | `36a9816` | `test/StakingOwnership.ts` |
-| `lastUpdateTime` written on every checkpoint but never read | `e899b2f` | removed |
+| Owner could withdraw user stake principal through `withdrawExcessReward` | `1fdb573` | `test/StakingContract.ts` (failing at `121ac59`) |
+| Unfunded emission of roughly 3.15M TKL per year against a 1M supply, with no period end | `4b986d2` | `test/StakingRewardPeriod.ts` |
+| Accrued but unclaimed rewards were still withdrawable by the owner | `4705522` | `test/StakingReserve.ts` |
+| Manual reentrancy lock, unchecked ERC-20 return values, single-step ownership, open `renounceOwnership()` | `c57cee9` | `test/StakingOwnership.ts` |
+| `lastUpdateTime` written on every checkpoint but never read | `4b986d2` | removed |
 
 ## Before any public deployment
 

@@ -193,7 +193,7 @@ Most of the plan below is now implemented; see [Current automated coverage](#cur
 | Reentrancy | State remains consistent against an adversarial token or receiver, if the design is extended to support non-standard tokens. |
 | Gas and long-horizon drift | Accrual accuracy over many checkpoints and very long periods, where flooring accumulates. |
 
-A useful practice when adding coverage: write the test against the unfixed behavior first and watch it fail. A test that has never failed has not been shown to test anything. Commits `e326f48` and `6e32bcf` are the worked example.
+A useful practice when adding coverage: write the test against the unfixed behavior first and watch it fail. A test that has never failed has not been shown to test anything. Commits `121ac59` and `1fdb573` are the worked example.
 
 ## Security and secret handling
 
