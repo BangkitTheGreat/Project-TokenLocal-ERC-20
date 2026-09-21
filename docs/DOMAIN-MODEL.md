@@ -80,12 +80,14 @@ Invariant: a non-owner must never be able to mint. Conversely, the owner can min
 | --- | --- |
 | `totalStaked` | Sum of principal attributed to all users. |
 | `stakes[user]` | Principal currently attributed to one user. |
-| `rewardRate` | Global emission rate in base units per second. |
-| `lastRewardTime` | Timestamp of the most recent global reward checkpoint. |
+| `rewardRate` | Emission rate for the current period, in base units per second. Zero until a period is funded. |
+| `periodFinish` | Timestamp at which the current reward period ends. |
+| `lastRewardTime` | Timestamp of the most recent global reward checkpoint. Never exceeds `periodFinish`. |
 | `rewardPerTokenStored` | Global accumulated reward index, scaled by `1e18`. |
 | `userRewardPerTokenPaid[user]` | User’s previously accounted global index. |
 | `rewards[user]` | Reward checkpointed for later payment. |
-| `lastUpdateTime[user]` | Timestamp recorded at a user checkpoint; currently not used by reward math. |
+| `rewardReserve` | Unpaid reward budget. Bonded alongside `totalStaked`. |
+| `totalScheduled` | Lifetime sum of scheduled emission, bounded so the reward index cannot overflow. |
 
 ### Stake lifecycle
 
@@ -112,8 +114,10 @@ The frontend follows this lifecycle: approve first, wait for confirmation, then 
 When there is at least one staked token:
 
 ```text
+applicable = min(block.timestamp, periodFinish)
+
 currentRewardPerToken = rewardPerTokenStored
-  + (block.timestamp - lastRewardTime) × rewardRate × 1e18 / totalStaked
+  + (applicable - lastRewardTime) × rewardRate × 1e18 / totalStaked
 ```
 
 For an individual staker:
@@ -124,14 +128,15 @@ earned(user) = stakes[user]
   + rewards[user]
 ```
 
-The `updateReward(account)` modifier checkpoints this accounting before a stake, withdrawal, claim, or reward-rate update.
+The `updateReward(account)` modifier checkpoints this accounting before a stake, withdrawal, claim, period funding, or surplus withdrawal.
 
 Reward invariants:
 
-1. When `totalStaked` is zero, no new per-token reward index is accrued.
+1. When `totalStaked` is zero, no new per-token reward index is accrued. That emission was earned by nobody, so its budget is released from `rewardReserve` back to free balance rather than handed to whoever stakes next.
 2. Reward allocation is proportional to stake over the periods represented by each checkpoint.
-3. Changing `rewardRate` checkpoints past accrual first, so the new rate applies only going forward.
-4. A reward credit is an accounting value; it is not proof that the pool has enough liquid TKL to pay it.
+3. Accrual never runs past `periodFinish`. A new period cannot start while the current one is active, so a rate in flight is never redirected.
+4. Emission is bounded by funds already transferred in: `rewardRate × duration` is committed at funding time, and the division remainder is not promised.
+5. `contract balance >= totalStaked + rewardReserve` is enforced, so a reward credit is backed rather than merely recorded.
 
 ## Access model
 
@@ -140,11 +145,12 @@ Reward invariants:
 | Transfer own TKL | Any token holder with sufficient balance. |
 | Stake | Any holder with sufficient allowance and balance. |
 | Withdraw stake | User whose `stakes[user]` covers the amount. |
-| Claim reward | Any staker; payment requires available pool liquidity. |
+| Claim reward | Any staker; payment requires sufficient reserve and non-principal balance. |
 | Mint TKL | Token owner only. |
-| Change reward rate | Staking-contract owner only. |
-| Deposit reward TKL | Staking-contract owner only, after token approval. |
-| Withdraw pool TKL | Staking-contract owner only. |
+| Fund a reward period | Staking-contract owner only, after token approval, and only when no period is running. |
+| Withdraw pool TKL | Staking-contract owner only, and only up to `freeBalance()`. |
+| Transfer staking ownership | Current owner proposes; the named account must accept. |
+| Renounce staking ownership | Nobody. The call always reverts. |
 
 The token owner and staking owner are independent ownership fields, although a normal local deployment creates both from the same deployer account.
 
@@ -157,7 +163,10 @@ The token owner and staking owner are independent ownership fields, although a n
 | `Staked` | User principal entered the staking pool. |
 | `Withdrawn` | User principal left the staking pool. |
 | `RewardPaid` | A reward transfer succeeded. |
-| `RewardRateUpdated` | Global reward emission changed. |
+| `RewardPeriodFunded` | A reward period was funded and started. |
+| `ReserveReleased` | Budget for an interval with no stakers returned to free balance. |
+| `ExcessWithdrawn` | Owner withdrew free balance. |
+| `OwnershipTransferStarted` | An ownership transfer was proposed and awaits acceptance. |
 | `OwnershipTransferred` | Contract administration changed. |
 
 Events are useful for indexers, logs, and UI refreshes, but contract storage remains authoritative.
@@ -168,8 +177,9 @@ Events are useful for indexers, logs, and UI refreshes, but contract storage rem
 2. Require ERC-20 approval before calling `stake`.
 3. Do not allow a withdrawal larger than `stakes[msg.sender]`.
 4. Keep `totalStaked` consistent with accepted stake minus successful withdrawals.
-5. Checkpoint rewards before changing a user stake or global reward rate.
-6. Do not assume accrued rewards are solvent until the pool has sufficient TKL balance.
-7. Never use local Hardhat accounts, addresses, or `contract-info.json` values as public-network deployment data.
-8. Treat `withdrawExcessReward` as unsafe for a public pool until it reserves all principal and reward obligations.
+5. Checkpoint rewards before changing a user stake or starting a reward period.
+6. Keep `contract balance >= totalStaked + rewardReserve` true after every operation. This is what makes an accrued reward backed rather than merely recorded.
+7. Release budget for staker-free intervals using the same `min(block.timestamp, periodFinish)` clamp as accrual. Releasing against a raw timestamp would free time that was never scheduled and leave the reserve short.
+8. Never use local Hardhat accounts, addresses, or `contract-info.json` values as public-network deployment data.
 9. Keep owner permissions explicit, tested, observable, and documented.
+10. Do not let an accounting fault revert inside `updateReward`. Every user function depends on that modifier, so a revert there would lock principal in, not just block the fault.

@@ -4,7 +4,7 @@
 ![Hardhat](https://img.shields.io/badge/Hardhat-tested-yellow?logo=hardhat&logoColor=black)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![ethers.js](https://img.shields.io/badge/ethers.js-v6-2535A0)
-![Tests](https://img.shields.io/badge/tests-8%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-31%20passing-brightgreen)
 ![Network](https://img.shields.io/badge/network-local%20only-orange)
 ![Status](https://img.shields.io/badge/status-educational%2C%20not%20audited-red)
 
@@ -26,7 +26,7 @@ It includes an ERC-20 token with owner-controlled minting, an experimental TKL s
 | Token decimals | 18 |
 | Initial local supply | 1,000,000 TKL to deployer |
 | Token minting | Unlimited and restricted to token owner |
-| Staking rewards | TKL per second using reward-per-token accounting |
+| Staking rewards | TKL per second using reward-per-token accounting, emitted only during a funded period |
 | Contract test runner | Hardhat + Chai |
 | Frontend | React 19, Create React App, ethers v6 |
 | Persistence | Hardhat node memory; reset when its process resets |
@@ -36,7 +36,8 @@ It includes an ERC-20 token with owner-controlled minting, an experimental TKL s
 - ERC-20 transfer, allowance, and `transferFrom` behavior inherited from OpenZeppelin.
 - Owner-only TKL minting.
 - Staking flow: approve → stake → withdraw → claim rewards.
-- Global reward-rate configuration and pool reward funding by staking owner.
+- Funded reward periods: the owner transfers a budget and a duration together, and emission is bounded by what was actually received.
+- Reserve accounting that keeps stake principal and the unpaid reward budget out of reach of the owner.
 - React wallet connection restricted to the local Hardhat chain.
 - Token metadata, balance, transfer, and owner mint UI.
 - Staking balance, allowance, pending reward, approval, stake, withdraw, and claim UI.
@@ -111,7 +112,11 @@ scripts/
 └── deployTokenLocal.ts        Deploys both contracts; writes frontend metadata
 
 test/
-└── TokenTest.ts               TokenLocal contract tests
+├── TokenTest.ts               TokenLocal contract tests
+├── StakingContract.ts         Reserve safety: owner cannot reach stake principal
+├── StakingRewardPeriod.ts     Funded periods, clamping, proportional split
+├── StakingReserve.ts          rewardReserve funding, release, and payment
+└── StakingOwnership.ts        Two-step ownership; renounce is blocked
 
 my-local-token-ui/
 └── src/
@@ -142,15 +147,15 @@ docs/
 
 ### Staking
 
-1. The staking owner funds reward liquidity by approving TKL and calling `depositRewardTokens`.
+1. The staking owner approves TKL and calls `notifyRewardAmount(amount, duration)`, which funds a reward period and starts it. Nothing is emitted before this.
 2. A user enters an amount and approves the staking contract for that amount.
 3. The user stakes, which transfers approved TKL into the pool.
-4. Reward accrues according to stake share, elapsed time, and the global rate.
-5. The user can claim reward and withdraw principal subject to pool liquidity and contract state.
+4. Reward accrues according to stake share and elapsed time, and stops at the end of the period.
+5. The user can claim reward and withdraw principal. Withdrawing principal does not claim rewards, so a reward-path failure can never block principal recovery.
 
 ![Staking lifecycle](docs/assets/staking-lifecycle.svg)
 
-The pool uses TKL for both staked principal and reward payment. Funding and owner withdrawal must therefore be managed carefully. See [Security notes](docs/SECURITY.md).
+The pool uses TKL for both staked principal and reward payment. The contract keeps the two solvent inside one balance by enforcing `balance >= totalStaked + rewardReserve`; only the remainder is withdrawable by the owner. See [Security notes](docs/SECURITY.md).
 
 ## Documentation
 
@@ -165,11 +170,11 @@ The pool uses TKL for both staked principal and reward payment. Funding and owne
 
 - Local Hardhat state is ephemeral; restarting the node invalidates old deployment addresses and balances.
 - The current deploy script has a frontend metadata output-path issue that must be corrected before automated frontend synchronization. See [Development guide](docs/DEVELOPMENT.md#deployment-metadata-handoff).
-- Existing automated tests cover `TokenLocal`, not the full staking lifecycle.
-- `StakingContract` reward accounting can accrue claims without proving pool solvency.
-- `withdrawExcessReward` lacks reserve enforcement and can endanger principal/reward liquidity if misused.
-- Token minting has no cap and relies entirely on token-owner trust.
-- The frontend assumes a local network and an 18-decimal token; it is not a generic production wallet client.
+- The staking suite covers known scenarios; there is no invariant or fuzz testing yet, and no external audit.
+- Token minting has no cap and relies entirely on token-owner trust. The reserve guarantees a user receives N tokens, not that N tokens are worth anything.
+- Only standard ERC-20 tokens are supported. `stake()` does not measure the amount actually received, so a fee-on-transfer or rebasing token would be over-credited.
+- Reward periods cannot be extended or topped up while running; the owner must wait for `periodFinish`.
+- The frontend has not been updated for the current contract. `contract-info.json` carries no `StakingContract` ABI, the app calls `stakedBalanceOf()` and `unstake()` which do not exist, and the Bridge screen reports success from a placeholder. See [Security notes](docs/SECURITY.md#frontend-risks-and-limitations).
 - No license file is currently included. Do not assume reuse or redistribution rights until one is added.
 
 ## Verification status
@@ -177,8 +182,12 @@ The pool uses TKL for both staked principal and reward payment. Funding and owne
 At the documented repository state:
 
 - `npx hardhat compile` completes successfully.
-- `npx hardhat test` reports 8 passing TokenLocal tests.
+- `npx hardhat test` reports 31 passing tests: 8 for `TokenLocal` and 23 for `StakingContract`.
 - `npx tsc --noEmit` completes successfully.
 - `CI=true npm run build` completes successfully in `my-local-token-ui/`.
 
-These checks establish only that the tested local code paths build and pass their existing tests. They do not provide an audit, public-deployment approval, or guarantee of staking-pool solvency.
+Not run: any public testnet, including Sepolia. Treat that as untested rather than passing.
+
+These checks establish only that the tested local code paths build and pass their existing tests. They do not provide an audit or public-deployment approval.
+
+The staking contract previously allowed the owner to withdraw user stake principal. That defect and the others found alongside it are described in [Security notes](docs/SECURITY.md#how-past-issues-were-closed), together with the commits that closed them and the tests that prove it.

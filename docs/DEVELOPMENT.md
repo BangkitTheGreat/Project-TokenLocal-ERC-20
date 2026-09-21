@@ -22,6 +22,12 @@ npm ci
 
 Use `npm ci` for a clean reproducible install. If a dependency is intentionally changed, update `package.json` and its matching lockfile together.
 
+### Hardhat is pinned to 2.x
+
+`hardhat` is held at `^2.x` because `@nomicfoundation/hardhat-toolbox@5` targets Hardhat 2. Hardhat 3 requires an ESM project (`"type": "module"`), a different config format, a different toolbox package, and a different way of obtaining `ethers` inside tests. Installing it here makes the toolchain refuse to run at all.
+
+Migrating is worthwhile later, mainly for Hardhat 3's Solidity fuzz and invariant tests, which would cover the gap noted under [Recommended staking-test plan](#recommended-staking-test-plan) far better than a hand-written randomized loop. Do it as its own change, driven by that need rather than by the version number.
+
 ## Run locally
 
 ![Local development workflow](assets/development-workflow.svg)
@@ -85,16 +91,24 @@ The frontend dependency tree may report deprecated transitive packages and audit
 | Allowance | Approval and `Approval` event. |
 | Mint control | Owner can mint; non-owner reverts. |
 
+`StakingContract` is covered by four files, 23 tests in total:
+
+| File | Covered behavior |
+| --- | --- |
+| `test/StakingContract.ts` | Owner cannot reach stake principal; contract balance never drops below `totalStaked`; a staker can always recover principal. |
+| `test/StakingRewardPeriod.ts` | Accrual stops at `periodFinish`; overlapping periods rejected; staker-free intervals are not awarded to whoever stakes next; proportional split; invalid amount and duration; flooring of the rate. |
+| `test/StakingReserve.ts` | Reserve rises on funding and falls on payment; budget released only for genuinely staker-free time; free-balance identity; direct donations remain withdrawable. |
+| `test/StakingOwnership.ts` | Renouncing reverts; two-step transfer requires acceptance; a mistyped address does not orphan the contract. |
+
 Not yet covered automatically:
 
-- all `StakingContract` state transitions;
-- reward accrual across time and multiple users;
-- stake/withdraw/claim edge cases;
-- funding and solvency behavior;
+- invariant and fuzz testing: the suite checks known scenarios, it does not search for unknown ones;
+- adversarial token behavior (reentrant, fee-on-transfer, rebasing), which the contract documents as unsupported rather than defends against;
 - frontend component behavior or browser-wallet flows;
-- deployment-script output path and metadata handoff.
+- deployment-script output path and metadata handoff;
+- any public testnet run.
 
-A passing token suite is not a security audit.
+A passing suite is not a security audit.
 
 ## Manual smoke test
 
@@ -119,7 +133,7 @@ Use only accounts printed by the current local Hardhat node. Do not test with re
 
 ### Staking flow
 
-1. As owner, approve the staking contract and call `depositRewardTokens` to fund reward liquidity.
+1. As owner, approve the staking contract and call `notifyRewardAmount(amount, duration)` to fund and start a reward period. Before this, `rewardRate` is zero and no reward accrues.
 2. As a user, enter a small stake amount and approve the pool.
 3. Wait for approval confirmation, then stake.
 4. Confirm wallet TKL decreases and the displayed stake increases.
@@ -170,19 +184,16 @@ Then redeploy. Do not hand-edit a production address into the frontend as a subs
 
 ## Recommended staking-test plan
 
-Add a dedicated `test/StakingContract.test.ts` with fixtures that deploy TKL and the pool, distribute user balances, and fund rewards.
+Most of the plan below is now implemented; see [Current automated coverage](#current-automated-coverage). What remains:
 
 | Scenario | Assertions |
 | --- | --- |
-| Stake validation | Zero stake reverts; stake without approval reverts; stake with approval transfers principal. |
-| Pool accounting | `stakes[user]` and `totalStaked` update correctly on stake and withdrawal. |
-| Withdrawal safety | Zero withdrawal and over-withdrawal revert; valid withdrawal returns principal. |
-| One-user reward | `earned` grows after time advances; claim clears stored credit and transfers TKL. |
-| Multi-user reward | Reward allocation is proportional to each stake and time at stake. |
-| Rate update | Pre-change accrual is preserved; new rate applies only after checkpoint. |
-| Access control | Non-owner cannot set rate, fund rewards, or withdraw pool tokens. |
-| Solvency | Claims fail predictably when underfunded; owner withdrawals cannot break protected reserve once that rule is implemented. |
-| Reentrancy | State remains consistent when interacting with adversarial token/receiver scenarios, if the design is extended to support them. |
+| Invariant testing | Randomized sequences of stake, withdraw, claim, fund, and time jumps, asserting `balance >= totalStaked + rewardReserve` against a reference model after every step. |
+| Fuzzed amounts and durations | Extreme and adversarial values fail at configuration time and never corrupt later operations. |
+| Reentrancy | State remains consistent against an adversarial token or receiver, if the design is extended to support non-standard tokens. |
+| Gas and long-horizon drift | Accrual accuracy over many checkpoints and very long periods, where flooring accumulates. |
+
+A useful practice when adding coverage: write the test against the unfixed behavior first and watch it fail. A test that has never failed has not been shown to test anything. Commits `e326f48` and `6e32bcf` are the worked example.
 
 ## Security and secret handling
 

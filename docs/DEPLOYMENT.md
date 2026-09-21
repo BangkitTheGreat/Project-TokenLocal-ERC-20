@@ -97,12 +97,16 @@ Navigate to `http://localhost:3000` and connect the MetaMask account imported fr
 
 ## Seed a staking reward pool
 
-`StakingContract` pays rewards from its own TKL balance. The initial token supply is held by the token deployer, not automatically deposited into the staking pool. Before a user can successfully claim rewards, fund the pool using the owner account:
+`StakingContract` pays rewards from its own TKL balance. The initial token supply is held by the token deployer, not automatically deposited into the staking pool. A freshly deployed contract has `rewardRate` of zero and emits nothing at all until a period is funded.
+
+Using the owner account:
 
 1. Approve the staking contract to spend TKL.
-2. Call `depositRewardTokens(amount)` on the staking contract.
+2. Call `notifyRewardAmount(amount, duration)` on the staking contract.
 
-This can be performed in an ethers script, a console, or a future owner UI. Ensure the pool keeps enough tokens to satisfy both staked principal withdrawals and accrued reward claims because the implementation uses one token balance for both.
+`duration` is in seconds and must be between 1 and `MAX_DURATION` (365 days). The emission rate is `amount / duration`, and the division remainder is not promised as reward. A new period is rejected while the current one is still running, so choose the duration deliberately: it cannot be shortened, extended, or topped up before `periodFinish`.
+
+This can be performed in an ethers script, a console, or a future owner UI. The contract keeps stake principal and the unpaid reward budget solvent within one balance, so no manual reserve management is required; `freeBalance()` reports what the owner may withdraw.
 
 ## Frontend production build
 

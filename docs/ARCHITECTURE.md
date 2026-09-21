@@ -63,14 +63,14 @@ User paths:
 
 1. Call `TokenLocal.approve(stakingAddress, amount)`.
 2. Call `stake(amount)`, which transfers the approved tokens into the pool.
-3. Call `withdraw(amount)` to return principal.
-4. Call `claimReward()` to transfer accrued rewards from the pool balance.
+3. Call `withdraw(amount)` to return principal. This does not claim rewards; accrued reward stays claimable afterwards.
+4. Call `claimReward()` to transfer accrued rewards from the reserved budget.
 
 Owner paths:
 
-- `setRewardRate(newRate)` changes the global reward emission rate.
-- `depositRewardTokens(amount)` transfers owner-funded reward inventory into the pool.
-- `withdrawExcessReward(amount)` transfers tokens from the pool to the owner.
+- `notifyRewardAmount(amount, duration)` transfers a reward budget in and starts a period. Rejected while a period is still running.
+- `withdrawExcessReward(amount)` transfers free balance to the owner, bounded by `freeBalance()` so stake principal and the unpaid reward budget are unreachable.
+- `transferOwnership(newOwner)` then `acceptOwnership()` move administration in two steps. `renounceOwnership()` always reverts.
 
 For exact state and accounting details, read [Smart-contract reference](SMART-CONTRACTS.md) and [Security notes](SECURITY.md).
 
