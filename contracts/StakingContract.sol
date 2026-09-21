@@ -2,10 +2,14 @@
 pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
-contract StakingContract is Ownable {
+contract StakingContract is Ownable2Step, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     error PeriodeMasihAktif(uint256 periodFinish);
     error DurasiTidakValid(uint256 duration);
     error JumlahNol();
@@ -17,15 +21,7 @@ contract StakingContract is Ownable {
     error MenarikDanaTerikat(uint256 diminta, uint256 saldoBebas);
     error CadanganTidakCukup(uint256 diminta, uint256 cadangan);
     error SaldoTidakCukup(uint256 diminta, uint256 tersedia);
-
-    // ponytail: guard manual dipertahankan; ditukar ke OZ ReentrancyGuard di sapuan hardening.
-    bool private _locked;
-    modifier nonReentrant() {
-        require(!_locked, "ReentrancyGuard: reentrant call");
-        _locked = true;
-        _;
-        _locked = false;
-    }
+    error TidakDapatMelepasKepemilikan();
 
     IERC20 public immutable stakingToken;
     IERC20 public immutable rewardToken;
@@ -66,6 +62,13 @@ contract StakingContract is Ownable {
         }
         stakingToken = IERC20(_stakingTokenAddress);
         rewardToken = IERC20(_stakingTokenAddress);
+    }
+
+    /// @dev Melepas kepemilikan akan membekukan kontrak secara permanen: tidak
+    ///      ada lagi yang dapat mendanai periode reward maupun menarik surplus.
+    ///      Pergantian owner tetap tersedia lewat alur dua langkah Ownable2Step.
+    function renounceOwnership() public pure override {
+        revert TidakDapatMelepasKepemilikan();
     }
 
     modifier updateReward(address _account) {
@@ -127,7 +130,7 @@ contract StakingContract is Ownable {
         if (_amount == 0) revert JumlahNol();
         totalStaked += _amount;
         stakes[msg.sender] += _amount;
-        require(stakingToken.transferFrom(msg.sender, address(this), _amount), "transferFrom failed");
+        stakingToken.safeTransferFrom(msg.sender, address(this), _amount);
         emit Staked(msg.sender, _amount);
     }
 
@@ -139,7 +142,7 @@ contract StakingContract is Ownable {
         if (_amount > saldo) revert StakeTidakCukup(_amount, saldo);
         totalStaked -= _amount;
         stakes[msg.sender] = saldo - _amount;
-        require(stakingToken.transfer(msg.sender, _amount), "transfer failed");
+        stakingToken.safeTransfer(msg.sender, _amount);
         emit Withdrawn(msg.sender, _amount);
     }
 
@@ -153,7 +156,7 @@ contract StakingContract is Ownable {
 
         rewards[msg.sender] = 0;
         rewardReserve -= reward;
-        require(rewardToken.transfer(msg.sender, reward), "reward transfer failed");
+        rewardToken.safeTransfer(msg.sender, reward);
         emit RewardPaid(msg.sender, reward);
     }
 
@@ -178,7 +181,7 @@ contract StakingContract is Ownable {
         if (terjadwal > sisaKapasitas) revert EmisiMelebihiBatas(terjadwal, sisaKapasitas);
 
         uint256 sebelum = rewardToken.balanceOf(address(this));
-        require(rewardToken.transferFrom(msg.sender, address(this), _amount), "funding failed");
+        rewardToken.safeTransferFrom(msg.sender, address(this), _amount);
         uint256 diterima = rewardToken.balanceOf(address(this)) - sebelum;
         if (diterima < _amount) revert PendanaanTidakUtuh(_amount, diterima);
 
@@ -201,7 +204,7 @@ contract StakingContract is Ownable {
     {
         uint256 bebas = freeBalance();
         if (_amount > bebas) revert MenarikDanaTerikat(_amount, bebas);
-        require(rewardToken.transfer(msg.sender, _amount), "Excess reward withdraw failed");
+        rewardToken.safeTransfer(msg.sender, _amount);
         emit ExcessWithdrawn(msg.sender, _amount);
     }
 }
