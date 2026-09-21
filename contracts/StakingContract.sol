@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.21; // Pastikan cocok atau kompatibel dengan versi di hardhat.config.ts (0.8.24 OK)
+pragma solidity ^0.8.21;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-// Hapus import SafeMath: import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-/* Manual reentrancy guard implemented below. */
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract StakingContract is Ownable {
-    // Hapus using SafeMath: using SafeMath for uint256;
+    error PeriodeMasihAktif(uint256 periodFinish);
+    error DurasiTidakValid(uint256 duration);
+    error JumlahNol();
+    error RateNol(uint256 amount, uint256 duration);
+    error EmisiMelebihiBatas(uint256 diminta, uint256 sisaKapasitas);
+    error PendanaanTidakUtuh(uint256 diminta, uint256 diterima);
+    error TokenTidakValid(address token);
+    error StakeTidakCukup(uint256 diminta, uint256 tersedia);
+    error MenarikPokokStake(uint256 diminta, uint256 saldoBebas);
 
-    // Manual reentrancy guard
+    // ponytail: guard manual dipertahankan; ditukar ke OZ ReentrancyGuard di sapuan hardening.
     bool private _locked;
     modifier nonReentrant() {
         require(!_locked, "ReentrancyGuard: reentrant call");
@@ -18,100 +25,147 @@ contract StakingContract is Ownable {
         _locked = false;
     }
 
-    IERC20 public immutable stakingToken; // Token yang di-stake (TKL)
-    IERC20 public immutable rewardToken;  // Token reward (kita gunakan TKL juga)
+    IERC20 public immutable stakingToken;
+    IERC20 public immutable rewardToken;
+
+    uint256 public constant MAX_DURATION = 365 days;
+    // Batas emisi seumur hidup. rewardPerTokenStored tumbuh paling cepat saat
+    // totalStaked = 1 wei, yaitu sebesar totalScheduled * 1e18. Batas ini menjaga
+    // akumulator tetap muat di uint256, sehingga input ekstrem gagal saat
+    // konfigurasi, bukan saat pengguna menarik dana.
+    uint256 public constant MAX_TOTAL_SCHEDULED = type(uint256).max / 1e18;
 
     uint256 public totalStaked;
-    mapping(address => uint256) public stakes; // Jumlah stake per user
-    mapping(address => uint256) public lastUpdateTime; // Waktu terakhir user update reward
-    mapping(address => uint256) public userRewardPerTokenPaid; // Reward per token yg sudah dibayar ke user
-    uint256 public rewardRate; // Jumlah reward TKL per detik untuk SEMUA staker (dalam WEI)
-    uint256 public lastRewardTime; // Waktu terakhir reward dihitung secara global
-    uint256 public rewardPerTokenStored; // Akumulasi reward per token secara global
+    mapping(address => uint256) public stakes;
+    mapping(address => uint256) public userRewardPerTokenPaid;
+    mapping(address => uint256) public rewards;
+
+    uint256 public rewardRate;
+    uint256 public periodFinish;
+    uint256 public lastRewardTime;
+    uint256 public rewardPerTokenStored;
+    uint256 public totalScheduled;
 
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
-    event RewardRateUpdated(uint256 newRate);
+    event RewardPeriodFunded(uint256 amount, uint256 scheduled, uint256 rate, uint256 periodFinish);
+    event ExcessWithdrawn(address indexed to, uint256 amount);
 
     constructor(address _stakingTokenAddress) Ownable(msg.sender) {
+        if (_stakingTokenAddress == address(0) || _stakingTokenAddress.code.length == 0) {
+            revert TokenTidakValid(_stakingTokenAddress);
+        }
         stakingToken = IERC20(_stakingTokenAddress);
         rewardToken = IERC20(_stakingTokenAddress);
-        lastRewardTime = block.timestamp;
-        // Contoh reward rate: 0.1 TKL per detik (100000000000000000 wei per detik)
-        rewardRate = 1 * (10**17);
     }
 
     modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
-        lastRewardTime = block.timestamp;
+        // Selalu ter-clamp ke periodFinish, sehingga lastRewardTime tidak pernah
+        // melewatinya dan pengurangan di rewardPerToken() tidak dapat underflow.
+        lastRewardTime = lastTimeRewardApplicable();
         if (_account != address(0)) {
-             rewards[_account] = earned(_account); // Hitung & simpan reward tertunda
-             userRewardPerTokenPaid[_account] = rewardPerTokenStored;
-             lastUpdateTime[_account] = block.timestamp;
+            rewards[_account] = earned(_account);
+            userRewardPerTokenPaid[_account] = rewardPerTokenStored;
         }
         _;
     }
 
-    function rewardPerToken() public view returns (uint256) {
-        if (totalStaked == 0) {
-            return rewardPerTokenStored;
-        }
-        uint256 timePassed = block.timestamp - lastRewardTime; // Gunakan operator standar
-        // Gunakan operator standar, Solidity 0.8+ sudah aman dari overflow/underflow
-        return rewardPerTokenStored + (timePassed * rewardRate * 1e18) / totalStaked;
+    function lastTimeRewardApplicable() public view returns (uint256) {
+        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
 
-    // Mapping untuk menyimpan reward tertunda (perlu ditambahkan)
-    mapping(address => uint256) public rewards;
+    function rewardPerToken() public view returns (uint256) {
+        uint256 applicable = lastTimeRewardApplicable();
+        if (totalStaked == 0 || applicable <= lastRewardTime) {
+            return rewardPerTokenStored;
+        }
+        uint256 timePassed = applicable - lastRewardTime;
+        return rewardPerTokenStored + Math.mulDiv(timePassed * rewardRate, 1e18, totalStaked);
+    }
 
     function earned(address _account) public view returns (uint256) {
-        uint256 currentRewardPerToken = rewardPerToken();
-        uint256 stakedAmount = stakes[_account];
-        // Gunakan operator standar
-        return (stakedAmount * (currentRewardPerToken - userRewardPerTokenPaid[_account])) / 1e18 + rewards[_account];
+        uint256 delta = rewardPerToken() - userRewardPerTokenPaid[_account];
+        return Math.mulDiv(stakes[_account], delta, 1e18) + rewards[_account];
+    }
+
+    /// @notice Saldo kontrak di luar pokok stake milik pengguna.
+    function freeBalance() public view returns (uint256) {
+        return rewardToken.balanceOf(address(this)) - totalStaked;
     }
 
     function stake(uint256 _amount) external nonReentrant updateReward(msg.sender) {
-        require(_amount > 0, "Cannot stake 0");
-        // Gunakan operator standar
-        totalStaked = totalStaked + _amount;
-        stakes[msg.sender] = stakes[msg.sender] + _amount;
+        if (_amount == 0) revert JumlahNol();
+        totalStaked += _amount;
+        stakes[msg.sender] += _amount;
         require(stakingToken.transferFrom(msg.sender, address(this), _amount), "transferFrom failed");
         emit Staked(msg.sender, _amount);
     }
 
+    /// @dev Sengaja TIDAK mengklaim reward. Kegagalan pembayaran reward tidak
+    ///      boleh ikut menggagalkan penarikan pokok.
     function withdraw(uint256 _amount) external nonReentrant updateReward(msg.sender) {
-        require(_amount > 0, "Cannot withdraw 0");
-        require(stakes[msg.sender] >= _amount, "Withdraw amount exceeds stake");
-        // Gunakan operator standar
-        totalStaked = totalStaked - _amount;
-        stakes[msg.sender] = stakes[msg.sender] - _amount;
+        if (_amount == 0) revert JumlahNol();
+        uint256 saldo = stakes[msg.sender];
+        if (_amount > saldo) revert StakeTidakCukup(_amount, saldo);
+        totalStaked -= _amount;
+        stakes[msg.sender] = saldo - _amount;
         require(stakingToken.transfer(msg.sender, _amount), "transfer failed");
-        emit Withdrawn(msg.sender, _amount); 
+        emit Withdrawn(msg.sender, _amount);
     }
 
     function claimReward() external nonReentrant updateReward(msg.sender) {
-        uint256 reward = earned(msg.sender); // earned() sudah menghitung reward tertunda
+        uint256 reward = rewards[msg.sender];
         if (reward > 0) {
-            rewards[msg.sender] = 0; // Reset reward tertunda user setelah dihitung
+            rewards[msg.sender] = 0;
             require(rewardToken.transfer(msg.sender, reward), "reward transfer failed");
             emit RewardPaid(msg.sender, reward);
         }
     }
 
-    function setRewardRate(uint256 _newRate) external onlyOwner updateReward(address(0)) {
-        rewardRate = _newRate;
-        emit RewardRateUpdated(_newRate);
+    /// @notice Danai dan mulai satu periode reward. Rate ditetapkan dari dana yang
+    ///         benar-benar masuk, sehingga emisi tidak pernah melebihi kas.
+    function notifyRewardAmount(uint256 _amount, uint256 _duration)
+        external
+        onlyOwner
+        nonReentrant
+        updateReward(address(0))
+    {
+        if (block.timestamp < periodFinish) revert PeriodeMasihAktif(periodFinish);
+        if (_duration == 0 || _duration > MAX_DURATION) revert DurasiTidakValid(_duration);
+        if (_amount == 0) revert JumlahNol();
+
+        uint256 rate = _amount / _duration;
+        if (rate == 0) revert RateNol(_amount, _duration);
+
+        // Sisa pembagian tidak dijanjikan sebagai reward; ia menjadi saldo bebas.
+        uint256 terjadwal = rate * _duration;
+        uint256 sisaKapasitas = MAX_TOTAL_SCHEDULED - totalScheduled;
+        if (terjadwal > sisaKapasitas) revert EmisiMelebihiBatas(terjadwal, sisaKapasitas);
+
+        uint256 sebelum = rewardToken.balanceOf(address(this));
+        require(rewardToken.transferFrom(msg.sender, address(this), _amount), "funding failed");
+        uint256 diterima = rewardToken.balanceOf(address(this)) - sebelum;
+        if (diterima < _amount) revert PendanaanTidakUtuh(_amount, diterima);
+
+        totalScheduled += terjadwal;
+        rewardRate = rate;
+        lastRewardTime = block.timestamp;
+        periodFinish = block.timestamp + _duration;
+
+        emit RewardPeriodFunded(_amount, terjadwal, rate, periodFinish);
     }
 
-    function depositRewardTokens(uint256 _amount) external onlyOwner {
-        require(rewardToken.transferFrom(msg.sender, address(this), _amount), "Reward deposit failed");
-    }
-
-    function withdrawExcessReward(uint256 _amount) external onlyOwner {
-         uint256 saldoBebas = rewardToken.balanceOf(address(this)) - totalStaked;
-         require(_amount <= saldoBebas, "Cannot withdraw staked principal");
-         require(rewardToken.transfer(msg.sender, _amount), "Excess reward withdraw failed");
+    function withdrawExcessReward(uint256 _amount)
+        external
+        onlyOwner
+        nonReentrant
+        updateReward(address(0))
+    {
+        uint256 bebas = freeBalance();
+        if (_amount > bebas) revert MenarikPokokStake(_amount, bebas);
+        require(rewardToken.transfer(msg.sender, _amount), "Excess reward withdraw failed");
+        emit ExcessWithdrawn(msg.sender, _amount);
     }
 }
