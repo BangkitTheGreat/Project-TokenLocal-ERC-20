@@ -110,6 +110,8 @@ contract StakingContract is Ownable {
     }
 
     function withdrawExcessReward(uint256 _amount) external onlyOwner {
+         uint256 saldoBebas = rewardToken.balanceOf(address(this)) - totalStaked;
+         require(_amount <= saldoBebas, "Cannot withdraw staked principal");
          require(rewardToken.transfer(msg.sender, _amount), "Excess reward withdraw failed");
     }
 }
