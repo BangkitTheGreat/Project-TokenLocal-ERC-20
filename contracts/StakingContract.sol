@@ -14,7 +14,9 @@ contract StakingContract is Ownable {
     error PendanaanTidakUtuh(uint256 diminta, uint256 diterima);
     error TokenTidakValid(address token);
     error StakeTidakCukup(uint256 diminta, uint256 tersedia);
-    error MenarikPokokStake(uint256 diminta, uint256 saldoBebas);
+    error MenarikDanaTerikat(uint256 diminta, uint256 saldoBebas);
+    error CadanganTidakCukup(uint256 diminta, uint256 cadangan);
+    error SaldoTidakCukup(uint256 diminta, uint256 tersedia);
 
     // ponytail: guard manual dipertahankan; ditukar ke OZ ReentrancyGuard di sapuan hardening.
     bool private _locked;
@@ -46,10 +48,16 @@ contract StakingContract is Ownable {
     uint256 public rewardPerTokenStored;
     uint256 public totalScheduled;
 
+    /// @notice Anggaran reward yang belum dibayar. Bersama totalStaked, inilah
+    ///         dana terikat yang tidak boleh disentuh owner.
+    ///         Invariant: saldo kontrak >= totalStaked + rewardReserve
+    uint256 public rewardReserve;
+
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
     event RewardPeriodFunded(uint256 amount, uint256 scheduled, uint256 rate, uint256 periodFinish);
+    event ReserveReleased(uint256 amount);
     event ExcessWithdrawn(address indexed to, uint256 amount);
 
     constructor(address _stakingTokenAddress) Ownable(msg.sender) {
@@ -61,10 +69,25 @@ contract StakingContract is Ownable {
     }
 
     modifier updateReward(address _account) {
+        uint256 applicable = lastTimeRewardApplicable();
+
+        // Emisi yang berjalan tanpa satu pun staker tidak menjadi hak siapa pun,
+        // jadi anggarannya dilepas kembali menjadi saldo bebas. Wajib memakai
+        // applicable yang sama dengan akrual: memakai block.timestamp mentah
+        // akan melepas waktu setelah periodFinish yang emisinya tidak pernah
+        // dijadwalkan, sehingga cadangan jadi lebih kecil dari kewajiban.
+        if (applicable > lastRewardTime && totalStaked == 0) {
+            uint256 takBerhak = Math.min((applicable - lastRewardTime) * rewardRate, rewardReserve);
+            if (takBerhak > 0) {
+                rewardReserve -= takBerhak;
+                emit ReserveReleased(takBerhak);
+            }
+        }
+
         rewardPerTokenStored = rewardPerToken();
         // Selalu ter-clamp ke periodFinish, sehingga lastRewardTime tidak pernah
         // melewatinya dan pengurangan di rewardPerToken() tidak dapat underflow.
-        lastRewardTime = lastTimeRewardApplicable();
+        lastRewardTime = applicable;
         if (_account != address(0)) {
             rewards[_account] = earned(_account);
             userRewardPerTokenPaid[_account] = rewardPerTokenStored;
@@ -90,9 +113,14 @@ contract StakingContract is Ownable {
         return Math.mulDiv(stakes[_account], delta, 1e18) + rewards[_account];
     }
 
-    /// @notice Saldo kontrak di luar pokok stake milik pengguna.
+    /// @notice Saldo kontrak di luar pokok stake dan anggaran reward.
+    /// @dev Saturating agar view ini tidak pernah revert seandainya pembukuan
+    ///      sempat melebihi saldo. Pembulatan selalu dicadangkan secara
+    ///      konservatif, jadi nilainya tidak pernah melebih-lebihkan.
     function freeBalance() public view returns (uint256) {
-        return rewardToken.balanceOf(address(this)) - totalStaked;
+        uint256 saldo = rewardToken.balanceOf(address(this));
+        uint256 terikat = totalStaked + rewardReserve;
+        return saldo > terikat ? saldo - terikat : 0;
     }
 
     function stake(uint256 _amount) external nonReentrant updateReward(msg.sender) {
@@ -117,11 +145,16 @@ contract StakingContract is Ownable {
 
     function claimReward() external nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
-        if (reward > 0) {
-            rewards[msg.sender] = 0;
-            require(rewardToken.transfer(msg.sender, reward), "reward transfer failed");
-            emit RewardPaid(msg.sender, reward);
-        }
+        if (reward == 0) return;
+
+        if (reward > rewardReserve) revert CadanganTidakCukup(reward, rewardReserve);
+        uint256 diLuarPokok = rewardToken.balanceOf(address(this)) - totalStaked;
+        if (reward > diLuarPokok) revert SaldoTidakCukup(reward, diLuarPokok);
+
+        rewards[msg.sender] = 0;
+        rewardReserve -= reward;
+        require(rewardToken.transfer(msg.sender, reward), "reward transfer failed");
+        emit RewardPaid(msg.sender, reward);
     }
 
     /// @notice Danai dan mulai satu periode reward. Rate ditetapkan dari dana yang
@@ -150,6 +183,7 @@ contract StakingContract is Ownable {
         if (diterima < _amount) revert PendanaanTidakUtuh(_amount, diterima);
 
         totalScheduled += terjadwal;
+        rewardReserve += terjadwal;
         rewardRate = rate;
         lastRewardTime = block.timestamp;
         periodFinish = block.timestamp + _duration;
@@ -157,6 +191,8 @@ contract StakingContract is Ownable {
         emit RewardPeriodFunded(_amount, terjadwal, rate, periodFinish);
     }
 
+    /// @dev updateReward dijalankan lebih dulu agar emisi tanpa staker sudah
+    ///      dilepas sebelum saldo bebas dihitung.
     function withdrawExcessReward(uint256 _amount)
         external
         onlyOwner
@@ -164,7 +200,7 @@ contract StakingContract is Ownable {
         updateReward(address(0))
     {
         uint256 bebas = freeBalance();
-        if (_amount > bebas) revert MenarikPokokStake(_amount, bebas);
+        if (_amount > bebas) revert MenarikDanaTerikat(_amount, bebas);
         require(rewardToken.transfer(msg.sender, _amount), "Excess reward withdraw failed");
         emit ExcessWithdrawn(msg.sender, _amount);
     }
